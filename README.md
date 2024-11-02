@@ -1,6 +1,6 @@
 ![npm version](http://img.shields.io/npm/v/oled-rpi-i2c-bus-async.svg?style=flat) ![downloads over month](http://img.shields.io/npm/dm/oled-rpi-i2c-bus-async.svg?style=flat)
 
-OLED JS Pi over i2c-bus
+Asynchronous OLED JS Pi over i2c-bus
 ========================
 
 ## What is this?
@@ -218,37 +218,48 @@ RGB value of (0, 0, 0), and pixels with any color value will be considered on.
 Use a library such as [pngjs](https://www.npmjs.com/package/pngjs) to read a png
 file into the required rgba data structure.
 
-Example:
-```JavaScript
+### Example with PNG Stream
+
+```javascript
 import fs from 'fs';
 import { PNG } from 'pngjs';
 import i2c from 'i2c-bus';
 import Oled from 'oled-i2c-bus';
 
-const i2cBus = i2c.openSync(0);
+const setupOled = async () => {
+  const i2cBus = await i2c.openPromisified(0);
 
-const opts = {
-  width: 128,
-  height: 64,
-  address: 0x3C
+  const opts = {
+    width: 128,
+    height: 64,
+    address: 0x3C
+  };
+
+  const display = new Oled(i2cBus, opts);
+
+  // Clear the display
+  await display.clearDisplay();
+
+  // Turn on the display
+  await display.turnOnDisplay();
+
+  // Read and draw the PNG image
+  fs.createReadStream('./test.png')
+    .pipe(new PNG({ filterType: 4 }))
+    .on('parsed', async function () {
+      setInterval(async () => {
+        await drawImage(this);
+      }, 1000);
+    });
+
+  const drawImage = async (image) => {
+    const x = Math.floor(Math.random() * (display.WIDTH) - image.width / 2);
+    const y = Math.floor(Math.random() * (display.HEIGHT) - image.height / 2);
+    await display.drawRGBAImage(image, x, y);
+  };
 };
 
-const display = new oled(i2cBus, opts);
-
-display.clearDisplay();
-display.turnOnDisplay();
-
-fs.createReadStream('./test.png')
-.pipe(new PNG({ filterType: 4 }))
-.on('parsed', function () {
-  setInterval(() => { drawImage(this) }, 1000);
-});
-
-function drawImage(image) {
-  let x = Math.floor(Math.random() * (display.WIDTH) - image.width / 2);
-  let y = Math.floor(Math.random() * (display.HEIGHT) - image.height / 2);
-  display.drawRGBAImage(image, x, y);
-}
+setupOled();
 ```
 
 
