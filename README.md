@@ -243,6 +243,13 @@ const setupOled = async () => {
   // Turn on the display
   await display.turnOnDisplay();
 
+  // Function to draw the image
+  const drawImage = async (image) => {
+    const x = Math.floor(Math.random() * (display.WIDTH - image.width / 2));
+    const y = Math.floor(Math.random() * (display.HEIGHT - image.height / 2));
+    await display.drawRGBAImage(image, x, y);
+  };
+
   // Read and draw the PNG image
   fs.createReadStream('./test.png')
     .pipe(new PNG({ filterType: 4 }))
@@ -251,12 +258,6 @@ const setupOled = async () => {
         await drawImage(this);
       }, 1000);
     });
-
-  const drawImage = async (image) => {
-    const x = Math.floor(Math.random() * (display.WIDTH) - image.width / 2);
-    const y = Math.floor(Math.random() * (display.HEIGHT) - image.height / 2);
-    await display.drawRGBAImage(image, x, y);
-  };
 };
 
 setupOled();

@@ -18,7 +18,7 @@
         "url": "https://github.com/grevelle/oled-rpi-i2c-bus-async.git"
     },
     "keywords": [
-        "Raspbery Pi",
+        "Raspberry Pi",
         "Pi",
         "NodeJS",
         "async",
@@ -26,7 +26,21 @@
         "oled",
         "SSD1306",
         "SH1106",
-        "128x64"
+        "128x64",
+        "128x32",
+        "96x16",
+        "I2C",
+        "SPI",
+        "Monochrome",
+        "Display",
+        "Screen",
+        "JavaScript",
+        "ES6",
+        "Non-blocking",
+        "PLED",
+        "Driver",
+        "Hardware",
+        "Embedded"
     ],
     "author": "Judd Flamm, Suz Hinton, Bogdan Symchych, Abdul Hadi Fikri, Greg Revelle",
     "license": "MIT",
