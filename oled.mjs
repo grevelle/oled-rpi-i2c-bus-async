@@ -1,7 +1,7 @@
-const SSD1306 = require('./drivers/ssd1306');
-const SH1106 = require('./drivers/sh1106');
-const fs = require('fs');
-const PNG = require('pngjs').PNG;
+import SSD1306 from './drivers/ssd1306';
+import SH1106 from './drivers/sh1106';
+import fs from 'fs';
+import { PNG } from 'pngjs';
 
 var pdxb = null;
 var pdyb = null;
@@ -294,4 +294,4 @@ function _drawPseudo(display, clear, image, pdxb, pdyb) {
     this.y += this.dy;
 }
 
-module.exports = Oled;
+export default Oled;

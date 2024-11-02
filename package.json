@@ -1,42 +1,41 @@
 {
-  "name": "oled-rpi-i2c-bus",
-  "version": "1.1.4",
-  "description": "NodeJS module for controlling oled devices on the Raspbery Pi (including the SSD1306 and SH1106 OLED screens)",
-  "main": "oled.js",
-  "devDependencies": {
-    "oled-font-pack": "^1.0.1",
-    "png-to-lcd": "~1.0.2",
-    "pngparse": "~2.0.1",
-    "temporal": "^0.3.8"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/hadifikri/oled-rpi-i2c-bus.git"
-  },
-  "keywords": [
-    "Raspbery Pi",
-    "Pi",
-    "NodeJS",
-    "oled",
-    "SSD1306",
-    "128x64"
-  ],
-  "author": [
-    "Judd Flamm",
-    "Suz Hinton",
-    "Bogdan Symchych",
-    "Abdul Hadi Fikri"
-  ],
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/hadifikri/oled-rpi-i2c-bus/issues"
-  },
-  "homepage": "https://github.com/hadifikri/oled-rpi-i2c-bus",
-  "dependencies": {
-    "i2c-bus": "^5.2.2",
-    "pngjs": "^3.3.3"
-  }
+    "name": "oled-rpi-i2c-bus-async",
+    "version": "1.0.0",
+    "description": "Asynchronous NodeJS module for controlling oled devices on the Raspbery Pi (including the SSD1306 and SH1106 OLED screens)",
+    "type": "module",
+    "main": "oled.mjs",
+    "devDependencies": {
+        "oled-font-pack": "^1.0.1",
+        "png-to-lcd": "^1.1.0",
+        "pngparse": "^2.0.1",
+        "temporal": "^0.7.1"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/grevelle/oled-rpi-i2c-bus-async.git"
+    },
+    "keywords": [
+        "Raspbery Pi",
+        "Pi",
+        "NodeJS",
+        "async",
+        "asynchronous",
+        "oled",
+        "SSD1306",
+        "SH1106",
+        "128x64"
+    ],
+    "author": "Judd Flamm, Suz Hinton, Bogdan Symchych, Abdul Hadi Fikri, Greg Revelle",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/grevelle/oled-rpi-i2c-bus-async/issues"
+    },
+    "homepage": "https://github.com/grevelle/oled-rpi-i2c-bus-async",
+    "dependencies": {
+        "i2c-bus": "^5.2.3",
+        "pngjs": "^7.0.0"
+    }
 }

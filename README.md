@@ -1,17 +1,19 @@
-![‘npm version’](http://img.shields.io/npm/v/oled-js.svg?style=flat) ![‘downloads over month’](http://img.shields.io/npm/dm/oled-js.svg?style=flat)
+![npm version](http://img.shields.io/npm/v/oled-rpi-i2c-bus-async.svg?style=flat) ![downloads over month](http://img.shields.io/npm/dm/oled-rpi-i2c-bus-async.svg?style=flat)
 
 OLED JS Pi over i2c-bus
 ========================
 
 ## What is this?
 
-This is fork of package [`oled-js-pi`](https://github.com/kd7yva/oled-js-pi) that works thru `i2c-bus` package and not use package `i2c`.
+This is a fork of the package [`oled-rpi-i2c-bus-async`](https://github.com/grevelle/oled-rpi-i2c-bus-async), which itself is a fork of [`oled-js-pi`](https://github.com/kd7yva/oled-js-pi). This version works through the `i2c-bus` package and does not use the `i2c` package.
 
-A NodeJS driver for I2C/SPI compatible monochrome OLED screens; to be used on the Raspberry Pi! Works with 128 x 32, 128 x 64 and 96 x 16 sized screens, of the SSD1306/SH1106 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)).
+A NodeJS driver for I2C/SPI compatible monochrome OLED screens; to be used on the Raspberry Pi! Works with 128 x 32, 128 x 64, and 96 x 16 sized screens, of the SSD1306/SH1106 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)).
 
-This based on the Blog Post and code by Suz Hinton - [Read her blog post about how OLED screens work](http://meow.noopkat.com/oled-js/)!
+This version includes two significant updates:
+1. Switched to using the asynchronous methods of the `i2c-bus` package for improved performance and non-blocking operations.
+2. Migrated to ES6 modules for modern JavaScript syntax and better module management.
 
-OLED screens are really cool - now you can control them with JavaScript!
+The original code is based on the blog post and code by Suz Hinton.
 
 ## Install
 
@@ -40,21 +42,30 @@ Hook up I2C compatible oled to the Raspberry Pi. Pins: SDA and SCL
 ### I2C example
 
 ```javascript
-var i2c = require('i2c-bus');
-var oled = require('oled-i2c-bus');
+import i2c from 'i2c-bus';
+import Oled from 'oled-rpi-i2c-bus-async';
 
-var opts = {
+const opts = {
   width: 128,
   height: 64,
   address: 0x3D,
   bus: 1,
-  driver:"SSD1306"
+  driver: "SSD1306"
 };
 
-var i2cbus = i2c.openSync(opts.bus)
-var oled = new oled(i2cBus, opts);
+const setupOled = async () => {
+  try {
+    const i2cBus = await i2c.openPromisified(opts.bus);
+    const oled = new Oled(i2cBus, opts);
 
-// do cool oled things here
+    // do cool oled things here
+
+  } catch (err) {
+    console.error('Error:', err);
+  }
+};
+
+setupOled();
 
 ```
 
@@ -68,7 +79,7 @@ Fills the buffer with 'off' pixels (0x00). Optional bool argument specifies whet
 
 Usage:
 ```javascript
-oled.clearDisplay();
+await oled.clearDisplay();
 ```
 
 ### dimDisplay
@@ -76,7 +87,7 @@ Lowers the contrast on the display. This method takes one argument, a boolean. T
 
 Usage:
 ```javascript
-oled.dimDisplay(true|false);
+await oled.dimDisplay(true);
 ```
 
 ### invertDisplay
@@ -84,7 +95,7 @@ Inverts the pixels on the display. Black becomes white, white becomes black. Thi
 
 Usage:
 ```javascript
-oled.invertDisplay(true|false);
+await oled.invertDisplay(true);
 ```
 
 ### turnOffDisplay
@@ -92,7 +103,7 @@ Turns the display off.
 
 Usage:
 ```javascript
-oled.turnOffDisplay();
+await oled.turnOffDisplay();
 ```
 
 ### turnOnDisplay
@@ -100,7 +111,7 @@ Turns the display on.
 
 Usage:
 ```javascript
-oled.turnOnDisplay();
+await oled.turnOnDisplay();
 ```
 
 
@@ -115,7 +126,7 @@ Usage:
 ```javascript
 // draws 4 white pixels total
 // format: [x, y, color]
-oled.drawPixel([
+await oled.drawPixel([
 	[128, 1, 1],
 	[128, 32, 1],
 	[128, 16, 1],
@@ -136,7 +147,7 @@ Optional bool as last argument specifies whether screen updates immediately with
 Usage:
 ```javascript
 // args: (x0, y0, x1, y1, color)
-oled.drawLine(1, 1, 128, 32, 1);
+await oled.drawLine(1, 1, 128, 32, 1);
 ```
 
 ### fillRect
@@ -152,7 +163,7 @@ Optional bool as last argument specifies whether screen updates immediately with
 Usage:
 ```javascript
 // args: (x0, y0, x1, y1, color)
-oled.fillRect(1, 1, 10, 20, 1);
+await oled.fillRect(1, 1, 10, 20, 1);
 ```
 
 ### drawBitmap
@@ -169,11 +180,15 @@ npm install pngparse
 ```
 
 ```javascript
-var pngparse = require('pngparse');
-
-pngparse.parseFile('indexed_file.png', function(err, image) {
-	oled.drawBitmap(image.data);
+// Parse the PNG file and draw the bitmap
+const image = await new Promise((resolve, reject) => {
+  pngparse.parseFile('indexed_file.png', (err, image) => {
+    if (err) reject(err);
+    else resolve(image);
+  });
 });
+
+await oled.drawBitmap(image.data);
 ```
 
 This method is provided as a primitive convenience. A better way to display images is to use NodeJS package [png-to-lcd](https://www.npmjs.org/package/png-to-lcd) instead. It's just as easy to use as drawBitmap, but is compatible with all image depths (lazy is good!). It will also auto-dither if you choose. You should still resize your image to your screen dimensions. This alternative method is covered below:
@@ -183,12 +198,16 @@ npm install png-to-lcd
 ```
 
 ```javascript
-var pngtolcd = require('png-to-lcd');
-
-pngtolcd('nyan-cat.png', true, function(err, bitmap) {
-  oled.buffer = bitmap;
-  oled.update();
+// Convert PNG to LCD bitmap and update the display
+const bitmap = await new Promise((resolve, reject) => {
+  pngtolcd('nyan-cat.png', true, (err, bitmap) => {
+    if (err) reject(err);
+    else resolve(bitmap);
+  });
 });
+
+oled.buffer = bitmap;
+await oled.update();
 ```
 
 ### drawRGBAImage
@@ -201,20 +220,20 @@ file into the required rgba data structure.
 
 Example:
 ```JavaScript
-const fs = require('fs');
-const PNG = require('pngjs').PNG;
-const i2c = require('i2c-bus');
-const oled = require('oled-i2c-bus');
+import fs from 'fs';
+import { PNG } from 'pngjs';
+import i2c from 'i2c-bus';
+import Oled from 'oled-i2c-bus';
 
-var i2cBus = i2c.openSync(0);
+const i2cBus = i2c.openSync(0);
 
-var opts = {
+const opts = {
   width: 128,
   height: 64,
   address: 0x3C
 };
 
-var display = new oled(i2cBus, opts);
+const display = new oled(i2cBus, opts);
 
 display.clearDisplay();
 display.turnOnDisplay();
@@ -243,7 +262,7 @@ Arguments:
 Usage:
 ```javascript
 // args: (direction, start, stop)
-oled.startscroll('left', 0, 15); // this will scroll an entire 128 x 32 screen
+await oled.startscroll('left', 0, 15); // this will scroll an entire 128 x 32 screen
 ```
 
 ### stopScroll
@@ -251,7 +270,7 @@ Stops all current scrolling behaviour.
 
 Usage:
 ```javascript
-oled.stopscroll();
+await oled.stopscroll();
 ```
 
 ### setCursor
@@ -262,7 +281,7 @@ Call setCursor just before writeString().
 Usage:
 ```javascript
 // sets cursor to x = 1, y = 1
-oled.setCursor(1, 1);
+await oled.setCursor(1, 1);
 ```
 
 ### writeString
@@ -286,11 +305,11 @@ npm install oled-font-5x7
 ```
 
 ```javascript
-var font = require('oled-font-5x7');
+import font from 'oled-font-5x7';
 
 // sets cursor to x = 1, y = 1
-oled.setCursor(1, 1);
-oled.writeString(font, 1, 'Cats and dogs are really cool animals, you know.', 1, true);
+await oled.setCursor(1, 1);
+await oled.writeString(font, 1, 'Cats and dogs are really cool animals, you know.', 1, true);
 ```
 
 Checkout https://www.npmjs.com/package/oled-font-pack for all-in-one font package.
@@ -300,7 +319,7 @@ Sends the entire buffer in its current state to the oled display, effectively sy
 
 Usage:
 ```javascript
-oled.update();
+await oled.update();
 ```
 
 ### battery  
@@ -318,7 +337,7 @@ Arguments:
 usage:
 ```javascript
 // args: (x,y,percentage)
-oled.battery(1,1,20);
+await oled.battery(1,1,20);
 ```  
 
 ### bluetooth  
@@ -327,7 +346,7 @@ Draw a bluetooth icon
 usage:
 ```javascript
 //args: (x,y)
-oled.bluetooth(1,1);  
+await oled.bluetooth(1,1);  
 ```
   
 ### wifi  
@@ -345,7 +364,7 @@ Arguments:
 usage:
 ```javascript
 // args: (x,y,percentage)
-oled.wifi(1,1,20);
+await oled.wifi(1,1,20);
 ``` 
 
 ### image  
@@ -363,6 +382,6 @@ Arguments:
 
 usage:
 ```javascript
-var font = require('oled-font-pack')
-oled.image(1,1,'rpi-frambuesa.png',font.oled_5x7,true,false,false,true);
+import font from 'oled-font-5x7';
+await oled.image(1,1,'rpi-frambuesa.png',font.oled_5x7,true,false,false,true);
 ```
