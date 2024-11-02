@@ -5,9 +5,9 @@ Asynchronous OLED JS Pi over i2c-bus
 
 ## What is this?
 
-This is a fork of the package [`oled-rpi-i2c-bus-async`](https://github.com/grevelle/oled-rpi-i2c-bus-async), which itself is a fork of [`oled-js-pi`](https://github.com/kd7yva/oled-js-pi). This version works through the `i2c-bus` package and does not use the `i2c` package.
+This is a fork of the package [`oled-rpi-i2c-bus`](https://github.com/hadifikri/oled-rpi-i2c-bus), which itself is a fork of [`oled-js-pi`](https://github.com/kd7yva/oled-js-pi). This version works through the `i2c-bus` package and does not use the `i2c` package.
 
-A NodeJS driver for I2C/SPI compatible monochrome OLED screens; to be used on the Raspberry Pi! Works with 128 x 32, 128 x 64, and 96 x 16 sized screens, of the SSD1306/SH1106 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)).
+A NodeJS driver for I2C/SPI compatible monochrome OLED screens; to be used on the Raspberry Pi. Works with 128 x 32, 128 x 64, and 96 x 16 sized screens, of the SSD1306/SH1106 OLED/PLED Controller (read the [datasheet here](http://www.adafruit.com/datasheets/SSD1306.pdf)).
 
 This version includes two significant updates:
 1. Switched to using the asynchronous methods of the `i2c-bus` package for improved performance and non-blocking operations.
