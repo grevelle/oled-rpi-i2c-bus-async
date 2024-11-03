@@ -22,7 +22,7 @@ where the `SDA` is on pin `GPIO23`/`BCM 16` and `SCK` is on pun `GPIO24`/`BCM 18
 
 If you haven't already, install [NodeJS](http://nodejs.org/).
 
-`npm install oled-i2c-bus`
+`npm install oled-rpi-i2c-bus-async`
 
 For `SH1106`, if you get an error:
 ```
