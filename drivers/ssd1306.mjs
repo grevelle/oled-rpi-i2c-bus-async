@@ -608,4 +608,4 @@ class SSD1306 {
   }
 }
 
-module.exports = SSD1306;
+export default SSD1306;
