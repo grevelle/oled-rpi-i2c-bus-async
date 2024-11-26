@@ -81,8 +81,8 @@ class SSD1306 {
 	};
 
 	// Turn OLED on
-	turnOnDisplay = async () => {
-		await this._transfer('cmd', this.DISPLAY_ON);
+	turnOffDisplay = async () => {
+		await this._transfer('cmd', this.DISPLAY_OFF);
 	};
 
 	// Send dim display command to oled
