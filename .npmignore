@@ -1,0 +1,20 @@
+# Development and test files
+tests/
+.github/
+bitmaps/
+font-dev.js
+
+# System files
+.DS_Store
+npm-debug.log
+
+# Node modules (should already be ignored by npm)
+node_modules/
+
+# Git files
+.git/
+.gitignore
+
+# Lock files (opinions vary, but generally better to exclude)
+package-lock.json
+yarn.lock

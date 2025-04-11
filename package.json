@@ -1,17 +1,38 @@
 {
 	"name": "oled-rpi-i2c-bus-async",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"description": "Asynchronous NodeJS module for controlling oled devices on the Raspbery Pi (including the SSD1306 and SH1106 OLED screens)",
 	"type": "module",
 	"main": "oled.mjs",
+	"engines": {
+		"node": ">=16.0.0"
+	},
+	"files": [
+		"oled.mjs",
+		"drivers/*.mjs",
+		"utils/*.mjs",
+		"resources/*.png",
+		"README.md",
+		"LICENSE"
+	],
 	"devDependencies": {
+		"eslint": "^8.54.0",
+		"eslint-config-prettier": "^9.0.0",
 		"oled-font-pack": "^1.0.1",
 		"png-to-lcd": "^1.1.0",
 		"pngparse": "^2.0.1",
+		"prettier": "^3.5.3",
 		"temporal": "^0.7.1"
 	},
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"example": "node tests/writeString.mjs",
+		"example:battery": "node tests/battery.mjs",
+		"example:image": "node tests/image.mjs",
+		"example:bluetooth": "node tests/bluetooth.mjs",
+		"example:wifi": "node tests/wifi.mjs",
+		"lint": "eslint .",
+		"format": "prettier --write \"**/*.{mjs,json,md}\""
 	},
 	"repository": {
 		"type": "git",
