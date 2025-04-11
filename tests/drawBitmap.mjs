@@ -27,11 +27,7 @@ const initializeDisplay = async () => {
     const oled = new SSD1306(i2cBus, opts);
 
     await oled.clearDisplay(true);
-    const imageFile = path.join(
-      __dirname,
-      '../../resources',
-      'icon_128x64_kiss.png'
-    );
+    const imageFile = path.join(__dirname, '../../resources', 'icon_128x64_kiss.png');
 
     parseFile(imageFile, async (err, image) => {
       if (err) {

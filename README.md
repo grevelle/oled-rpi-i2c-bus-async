@@ -3,12 +3,12 @@
 ![license](https://img.shields.io/npm/l/oled-rpi-i2c-bus-async.svg?style=flat)
 ![node version](https://img.shields.io/node/v/oled-rpi-i2c-bus-async.svg?style=flat)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Supported-blue.svg)
-![build status](https://img.shields.io/github/actions/workflow/status/grevelle/oled-rpi-i2c-bus-async/node.js.yml?branch=main&style=flat)
 ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat)
 
 # Asynchronous OLED JS Pi over i2c-bus
 
 ## Table of Contents
+
 - [What is this?](#what-is-this)
 - [Features](#features)
 - [Installation](#installation)
@@ -60,17 +60,19 @@ npm install oled-rpi-i2c-bus-async
 
 ### I2C Configuration
 
-Raspberry Pi allows for software I2C. To enable software I2C, add `dtoverlay=i2c-gpio,bus=3` to `/boot/config.txt`. The software I2C would be available on `bus` no `3` 
-where the `SDA` is on pin `GPIO23`/`BCM 16` and `SCL` is on pin `GPIO24`/`BCM 18`. 
+Raspberry Pi allows for software I2C. To enable software I2C, add `dtoverlay=i2c-gpio,bus=3` to `/boot/config.txt`. The software I2C would be available on `bus` no `3`
+where the `SDA` is on pin `GPIO23`/`BCM 16` and `SCL` is on pin `GPIO24`/`BCM 18`.
 
 ### Troubleshooting
 
 For `SH1106` displays, if you get an error:
+
 ```
 "Error: , Remote I/O error"
 ```
 
 You might have to lower the baudrate by adding the following line to `/boot/config.txt` and rebooting the Pi:
+
 ```
 dtparam=i2c_baudrate=10000
 ```
@@ -78,6 +80,7 @@ dtparam=i2c_baudrate=10000
 This is a known issue with Raspberry Pi as noted in [Raspberry Pi I2C hardware bug](https://github.com/fivdi/i2c-bus/issues/36). Alternatively, use software I2C.
 
 ## I2C screens
+
 Hook up I2C compatible oled to the Raspberry Pi. Pins: SDA and SCL
 
 ### I2C example
@@ -89,9 +92,9 @@ import Oled from 'oled-rpi-i2c-bus-async';
 const opts = {
   width: 128,
   height: 64,
-  address: 0x3D,
+  address: 0x3d,
   bus: 1,
-  driver: "SSD1306"
+  driver: 'SSD1306',
 };
 
 const setupOled = async () => {
@@ -100,7 +103,6 @@ const setupOled = async () => {
     const oled = new Oled(i2cBus, opts);
 
     // do cool oled things here
-
   } catch (err) {
     console.error('Error:', err);
   }
@@ -120,21 +122,21 @@ import font from 'oled-font-5x7';
 const options: OledOptions = {
   width: 128,
   height: 64,
-  address: 0x3D,
+  address: 0x3d,
   bus: 1,
   driver: 'SSD1306',
-  logLevel: 'info'
+  logLevel: 'info',
 };
 
 const setupDisplay = async () => {
   try {
     const i2cBus = await (await import('i2c-bus')).openPromisified(options.bus);
     const oled = new Oled(i2cBus, options);
-    
+
     await oled.clearDisplay();
     await oled.setCursor(1, 1);
     await oled.writeString(font as Font, 1, 'TypeScript Example', 1, true);
-    
+
     // Draw some UI elements
     await oled.battery(5, 30, 80);
     await oled.wifi(50, 30, 60);
@@ -179,6 +181,7 @@ npm run example:image     # PNG image example
 ### Display Control
 
 #### clearDisplay
+
 Fills the buffer with 'off' pixels (0x00). Optional bool argument specifies whether screen updates immediately with result. Default is true.
 
 ```javascript
@@ -186,6 +189,7 @@ await oled.clearDisplay();
 ```
 
 #### dimDisplay
+
 Lowers the contrast on the display. This method takes one argument, a boolean. True for dimming, false to restore normal contrast.
 
 ```javascript
@@ -193,6 +197,7 @@ await oled.dimDisplay(true);
 ```
 
 #### invertDisplay
+
 Inverts the pixels on the display. Black becomes white, white becomes black. This method takes one argument, a boolean. True for inverted state, false to restore normal pixel colors.
 
 ```javascript
@@ -200,6 +205,7 @@ await oled.invertDisplay(true);
 ```
 
 #### turnOffDisplay
+
 Turns the display off.
 
 ```javascript
@@ -207,6 +213,7 @@ await oled.turnOffDisplay();
 ```
 
 #### turnOnDisplay
+
 Turns the display on.
 
 ```javascript
@@ -214,6 +221,7 @@ await oled.turnOnDisplay();
 ```
 
 #### update
+
 Sends the entire buffer in its current state to the oled display, effectively syncing the two. This method generally does not need to be called, unless you're messing around with the framebuffer manually before you're ready to sync with the display. It's also needed if you're choosing not to draw on the screen immediately with the built in methods.
 
 ```javascript
@@ -223,6 +231,7 @@ await oled.update();
 ### Drawing Methods
 
 #### drawPixel
+
 Draws a pixel at a specified position on the display. This method takes one argument: a multi-dimensional array containing either one or more sets of pixels.
 
 Each pixel needs an x position, a y position, and a color. Colors can be specified as either 0 for 'off' or black, and 1 or 255 for 'on' or white.
@@ -233,20 +242,22 @@ Optional bool as last argument specifies whether screen updates immediately with
 // draws 4 white pixels total
 // format: [x, y, color]
 await oled.drawPixel([
-	[128, 1, 1],
-	[128, 32, 1],
-	[128, 16, 1],
-	[64, 16, 1]
+  [128, 1, 1],
+  [128, 32, 1],
+  [128, 16, 1],
+  [64, 16, 1],
 ]);
 ```
 
 #### drawLine
+
 Draws a one pixel wide line.
 
 Arguments:
-+ int **x0, y0** - start location of line
-+ int **x1, y1** - end location of line
-+ int **color** - can be specified as either 0 for 'off' or black, and 1 or 255 for 'on' or white.
+
+- int **x0, y0** - start location of line
+- int **x1, y1** - end location of line
+- int **color** - can be specified as either 0 for 'off' or black, and 1 or 255 for 'on' or white.
 
 Optional bool as last argument specifies whether screen updates immediately with result. Default is true.
 
@@ -256,12 +267,14 @@ await oled.drawLine(1, 1, 128, 32, 1);
 ```
 
 #### fillRect
+
 Draws a filled rectangle.
 
 Arguments:
-+ int **x0, y0** - top left corner of rectangle
-+ int **w, h** - width and height of rectangle
-+ int **color** - can be specified as either 0 for 'off' or black, and 1 or 255 for 'on' or white.
+
+- int **x0, y0** - top left corner of rectangle
+- int **w, h** - width and height of rectangle
+- int **color** - can be specified as either 0 for 'off' or black, and 1 or 255 for 'on' or white.
 
 Optional bool as last argument specifies whether screen updates immediately with result. Default is true.
 
@@ -273,6 +286,7 @@ await oled.fillRect(1, 1, 10, 20, 1);
 ### Text Methods
 
 #### setCursor
+
 Sets the x and y position of 'cursor', when about to write text. This effectively helps tell the display where to start typing when writeString() method is called.
 
 Call setCursor just before writeString().
@@ -283,15 +297,17 @@ await oled.setCursor(1, 1);
 ```
 
 #### writeString
+
 Writes a string of text to the display.  
 Call setCursor() just before, if you need to set starting text position.
 
 Arguments:
-+ obj **font** - font object in JSON format (see note below on sourcing a font)
-+ int **size** - font size, as multiplier. Eg. 2 would double size, 3 would triple etc.
-+ string **text** - the actual text you want to show on the display.
-+ int **color** - color of text. Can be specified as either 0 for 'off' or black, and 1 or 255 for 'on' or white.
-+ bool **wrapping** - true applies word wrapping at the screen limit, false for no wrapping. If a long string without spaces is supplied as the text, just letter wrapping will apply instead.
+
+- obj **font** - font object in JSON format (see note below on sourcing a font)
+- int **size** - font size, as multiplier. Eg. 2 would double size, 3 would triple etc.
+- string **text** - the actual text you want to show on the display.
+- int **color** - color of text. Can be specified as either 0 for 'off' or black, and 1 or 255 for 'on' or white.
+- bool **wrapping** - true applies word wrapping at the screen limit, false for no wrapping. If a long string without spaces is supplied as the text, just letter wrapping will apply instead.
 
 Optional bool as last argument specifies whether screen updates immediately with result. Default is true.
 
@@ -314,6 +330,7 @@ Checkout https://www.npmjs.com/package/oled-font-pack for all-in-one font packag
 ### Image Display
 
 #### drawBitmap
+
 Draws a bitmap using raw pixel data returned from an image parser. The image sourced must be monochrome, and indexed to only 2 colors. Resize the bitmap to your screen dimensions first. Using an image editor or ImageMagick might be required.
 
 Optional bool as last argument specifies whether screen updates immediately with result. Default is true.
@@ -356,6 +373,7 @@ await oled.update();
 ```
 
 #### drawRGBAImage
+
 Draw an RGBA coded image at specific coordinates. This only supports a monochrome
 OLED so transparent pixels must be 100% transparent, off pixels should have an
 RGB value of (0, 0, 0), and pixels with any color value will be considered on.
@@ -377,7 +395,7 @@ const setupOled = async () => {
   const opts = {
     width: 128,
     height: 64,
-    address: 0x3C
+    address: 0x3c,
   };
 
   const display = new Oled(i2cBus, opts);
@@ -408,30 +426,34 @@ const setupOled = async () => {
 setupOled();
 ```
 
-#### image  
-A wrapper for `drawRGBAImage` that supports a fix animation. The animation always start from `x=1` and `y=1`. 
+#### image
+
+A wrapper for `drawRGBAImage` that supports a fix animation. The animation always start from `x=1` and `y=1`.
 
 Arguments:
-* int **x** - start column (ignored on `animation = true`)  
-* int **y** - start row (ignored on `animation=true`)  
-* string **image** - full path to the image or the filename of the image in the `resources` folder   
-* object **font** - font to draw "error" message  
-* boolean **clear** - clear the display before the draw  
-* boolean **reset** - stop all animations  
-* boolean **animated** - enable/disable animation  
-* boolean **wrapping** - enable/disable of the error message wrapping  
+
+- int **x** - start column (ignored on `animation = true`)
+- int **y** - start row (ignored on `animation=true`)
+- string **image** - full path to the image or the filename of the image in the `resources` folder
+- object **font** - font to draw "error" message
+- boolean **clear** - clear the display before the draw
+- boolean **reset** - stop all animations
+- boolean **animated** - enable/disable animation
+- boolean **wrapping** - enable/disable of the error message wrapping
 
 ```javascript
 import font from 'oled-font-5x7';
-await oled.image(1,1,'rpi-frambuesa.png',font.oled_5x7,true,false,false,true);
+await oled.image(1, 1, 'rpi-frambuesa.png', font.oled_5x7, true, false, false, true);
 ```
 
 #### startScroll
+
 Scrolls the current display either left or right.
 Arguments:
-+ string **direction** - direction of scrolling. 'left' or 'right'
-+ int **start** - starting row of scrolling area
-+ int **stop** - end row of scrolling area
+
+- string **direction** - direction of scrolling. 'left' or 'right'
+- int **start** - starting row of scrolling area
+- int **stop** - end row of scrolling area
 
 Note: This is only supported on SSD1306 displays, not on SH1106.
 
@@ -441,6 +463,7 @@ await oled.startScroll('left', 0, 15); // this will scroll an entire 128 x 32 sc
 ```
 
 #### stopScroll
+
 Stops all current scrolling behavior.
 
 ```javascript
@@ -449,47 +472,54 @@ await oled.stopScroll();
 
 ### UI Components
 
-#### battery  
-Draw a battery level in percentage indicator. This method allows for up to 4 different states of the battery:    
-- 0 bar : battery < 10%    
-- 1 bar : 10% >= battery < 40%  
-- 2 bar : 40% >= battery < 70%  
-- 3 bar : battery >= 70%    
-  
+#### battery
+
+Draw a battery level in percentage indicator. This method allows for up to 4 different states of the battery:
+
+- 0 bar : battery < 10%
+- 1 bar : 10% >= battery < 40%
+- 2 bar : 40% >= battery < 70%
+- 3 bar : battery >= 70%
+
 Arguments:
-* int **x** - start column    
-* int **y** - start row  
-* int **percentage** - battery level percentage  
+
+- int **x** - start column
+- int **y** - start row
+- int **percentage** - battery level percentage
 
 ```javascript
 // args: (x,y,percentage)
-await oled.battery(1,1,20);
-```  
+await oled.battery(1, 1, 20);
+```
 
-#### bluetooth  
+#### bluetooth
+
 Draw a bluetooth icon
-  
+
 ```javascript
 //args: (x,y)
-await oled.bluetooth(1,1);  
+await oled.bluetooth(1, 1);
 ```
-  
-#### wifi  
-Draw a WiFi signal strength in percentage indicator. This method allows for up to 4 different signal strength of the WiFi signal:    
-- 0 bar : signal < 10%    
-- 1 bar : 10% >= signal < 40%  
-- 2 bar : 40% >= signal < 70%  
-- 3 bar : signal >= 70%    
-  
+
+#### wifi
+
+Draw a WiFi signal strength in percentage indicator. This method allows for up to 4 different signal strength of the WiFi signal:
+
+- 0 bar : signal < 10%
+- 1 bar : 10% >= signal < 40%
+- 2 bar : 40% >= signal < 70%
+- 3 bar : signal >= 70%
+
 Arguments:
-* int **x** - start column    
-* int **y** - start row  
-* int **percentage** - signal strength in percentage  
+
+- int **x** - start column
+- int **y** - start row
+- int **percentage** - signal strength in percentage
 
 ```javascript
 // args: (x,y,percentage)
-await oled.wifi(1,1,20);
-``` 
+await oled.wifi(1, 1, 20);
+```
 
 ## Performance Optimization
 
@@ -511,14 +541,15 @@ The library includes a built-in logging utility with configurable verbosity leve
 const opts = {
   width: 128,
   height: 64,
-  address: 0x3C,
+  address: 0x3c,
   bus: 1,
-  driver: "SSD1306",
-  logLevel: "debug"  // Available: "debug", "info", "warn", "error", "silent"
+  driver: 'SSD1306',
+  logLevel: 'debug', // Available: "debug", "info", "warn", "error", "silent"
 };
 ```
 
 When debugging issues:
+
 1. Set the log level to `debug` to see all operations.
 2. Check for I2C communication errors in the logs.
 3. Verify your display address and bus configuration.

@@ -11,6 +11,7 @@ By participating in this project, you agree to maintain a welcoming environment 
 ### Reporting Bugs
 
 If you find a bug, please create an issue with the following information:
+
 - A clear, descriptive title
 - Steps to reproduce the issue
 - Expected behavior
@@ -20,6 +21,7 @@ If you find a bug, please create an issue with the following information:
 ### Suggesting Features
 
 Feature suggestions are welcome! Please create an issue with:
+
 - A clear, descriptive title
 - A detailed description of the proposed feature
 - Any relevant examples or use cases

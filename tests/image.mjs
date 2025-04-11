@@ -26,29 +26,11 @@ const initializeDisplay = async () => {
     const oled = new SSD1306(i2cBus, opts);
 
     await oled.clearDisplay(true);
-    await oled.image(
-      0,
-      0,
-      'WaterBrain.png',
-      font.oled_5x7,
-      false,
-      false,
-      true,
-      false
-    );
+    await oled.image(0, 0, 'WaterBrain.png', font.oled_5x7, false, false, true, false);
 
     setTimeout(async () => {
       await oled.image(0, 0, '', font.oled_5x7, true, true, false, false);
-      await oled.image(
-        30,
-        3,
-        'rpi-frambuesa.png',
-        font.oled_5x7,
-        true,
-        false,
-        false,
-        false
-      );
+      await oled.image(30, 3, 'rpi-frambuesa.png', font.oled_5x7, true, false, false, false);
     }, 5000);
   } catch (err) {
     console.log(err.message);

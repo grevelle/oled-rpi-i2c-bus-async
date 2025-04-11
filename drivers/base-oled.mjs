@@ -6,7 +6,7 @@ class BaseOLED {
   constructor(i2c, opts) {
     // Create a driver-specific logger
     this.logger = createLogger('BaseOLED');
-    
+
     // Use optional chaining and nullish coalescing for options
     this.HEIGHT = opts?.height ?? 64;
     this.WIDTH = opts?.width ?? 128;
@@ -15,7 +15,7 @@ class BaseOLED {
     this.MAX_PAGE_COUNT = this.HEIGHT / 8;
     this.LINESPACING = opts?.linespacing ?? 1;
     this.LETTERSPACING = opts?.letterspacing ?? 1;
-    
+
     // Set logger level if provided
     if (opts?.logLevel) {
       this.logger.setLevel(opts.logLevel);
@@ -52,7 +52,7 @@ class BaseOLED {
    * Common OLED control methods
    * ##################################################################################################
    */
-   
+
   // Turn OLED on
   turnOnDisplay = async () => {
     await this._transfer('cmd', this.DISPLAY_ON);
@@ -95,10 +95,10 @@ class BaseOLED {
     try {
       // Fast buffer clear operation using fill
       this.buffer.fill(0x00);
-      
+
       // Since we're clearing the entire display, mark everything as dirty
       this.dirtyBytes = Array.from({ length: this.buffer.length }, (_, i) => i);
-      
+
       if (sync) {
         // For a full clear, do a full update - more efficient than updating every dirty byte
         await this.update();
@@ -112,12 +112,7 @@ class BaseOLED {
 
   // Draw a segment of a page on the oled
   drawPageSeg = async (page, seg, byte, sync) => {
-    if (
-      page < 0 ||
-      page >= this.MAX_PAGE_COUNT ||
-      seg < 0 ||
-      seg >= this.WIDTH
-    ) {
+    if (page < 0 || page >= this.MAX_PAGE_COUNT || seg < 0 || seg >= this.WIDTH) {
       return;
     }
 
@@ -186,9 +181,9 @@ class BaseOLED {
   // Draw a line using Bresenham's line algorithm
   drawLine = async (x0, y0, x1, y1, color, sync = true) => {
     const dx = Math.abs(x1 - x0),
-          sx = x0 < x1 ? 1 : -1;
+      sx = x0 < x1 ? 1 : -1;
     const dy = Math.abs(y1 - y0),
-          sy = y0 < y1 ? 1 : -1;
+      sy = y0 < y1 ? 1 : -1;
     let err = (dx > dy ? dx : -dy) / 2;
 
     while (true) {
@@ -286,30 +281,31 @@ class BaseOLED {
   drawRGBAImage = async (image, dx, dy, sync) => {
     try {
       const immed = sync ?? true;
-      
+
       // Pre-calculate constants to avoid repeated calculations
       const dyp = this.WIDTH * Math.floor(dy / 8);
       const dxyp = dyp + dx;
       const imageWidth = image.width;
       const imageHeight = image.height;
       const dirtySet = new Set(); // Use Set for more efficient uniqueness check
-      
+
       // Process image data by columns
       for (let x = 0; x < imageWidth; x++) {
         const dxx = dx + x;
         if (dxx < 0 || dxx >= this.WIDTH) continue;
-        
+
         let buffIndex = x + dxyp;
         let buffByte = this.buffer[buffIndex];
-        
+
         for (let y = 0; y < imageHeight; y++) {
           const dyy = dy + y;
           if (dyy < 0 || dyy >= this.HEIGHT) continue;
-          
+
           const dyyp = Math.floor(dyy / 8);
-          
+
           // Check if start of buffer page
-          if (!(dyy & 0x07)) { // Equivalent to (dyy % 8) but faster
+          if (!(dyy & 0x07)) {
+            // Equivalent to (dyy % 8) but faster
             // Check if we need to save previous byte
             if ((x || y) && buffByte !== this.buffer[buffIndex]) {
               this.buffer[buffIndex] = buffByte;
@@ -319,17 +315,17 @@ class BaseOLED {
             buffIndex = dx + x + this.WIDTH * dyyp;
             buffByte = this.buffer[buffIndex];
           }
-          
+
           // Process pixel into buffer byte - more efficient indexing
-          const dataIndex = ((imageWidth * y) + x) << 2; // 4 bytes per pixel (RGBA)
-          
+          const dataIndex = (imageWidth * y + x) << 2; // 4 bytes per pixel (RGBA)
+
           // Skip transparent pixels
           if (!image.data[dataIndex + 3]) continue;
-          
+
           // Check if any color channel is non-zero
           const bit = image.data[dataIndex] | image.data[dataIndex + 1] | image.data[dataIndex + 2];
           const pixelByte = 1 << (dyy & 0x07); // Equivalent to (dyy - 8 * dyyp) but faster
-          
+
           // Set or clear the bit
           if (bit) {
             buffByte |= pixelByte;
@@ -337,17 +333,17 @@ class BaseOLED {
             buffByte &= ~pixelByte;
           }
         }
-        
+
         // Save the final byte for this column if changed
         if (buffByte !== this.buffer[buffIndex]) {
           this.buffer[buffIndex] = buffByte;
           dirtySet.add(buffIndex);
         }
       }
-      
+
       // Convert Set to Array and append to dirtyBytes
       this.dirtyBytes.push(...dirtySet);
-      
+
       if (immed) {
         await this._updateDirtyBytes(this.dirtyBytes);
       }
@@ -364,41 +360,41 @@ class BaseOLED {
       const dirtySet = new Set();
       const pixelLength = pixels.length;
       const width = this.WIDTH;
-      
+
       // Process pixels in chunks for better performance
       const CHUNK_SIZE = 1024; // Process 1KB at a time
-      
+
       for (let chunkStart = 0; chunkStart < pixelLength; chunkStart += CHUNK_SIZE) {
         const chunkEnd = Math.min(chunkStart + CHUNK_SIZE, pixelLength);
-        
+
         // Process this chunk of pixels
         for (let i = chunkStart; i < chunkEnd; i++) {
           const x = Math.floor(i % width);
           const y = Math.floor(i / width);
-          
+
           if (x < 0 || x >= this.WIDTH || y < 0 || y >= this.HEIGHT) {
             continue;
           }
-          
+
           const page = Math.floor(y / 8);
           const byte = x + this.WIDTH * page;
           const pageShift = 0x01 << (y & 0x07);
-          
+
           // Set or clear the pixel
           if (pixels[i]) {
             this.buffer[byte] |= pageShift;
           } else {
             this.buffer[byte] &= ~pageShift;
           }
-          
+
           // Mark as dirty
           dirtySet.add(byte);
         }
       }
-      
+
       // Add dirty bytes to the tracking array
       this.dirtyBytes.push(...dirtySet);
-      
+
       if (sync) {
         await this._updateDirtyBytes(this.dirtyBytes);
       }
@@ -417,7 +413,7 @@ class BaseOLED {
   _drawChar = async (byteArray, charHeight, size, _sync) => {
     // Take your positions...
     const x = this.cursor_x,
-          y = this.cursor_y;
+      y = this.cursor_y;
 
     // Loop through the byte array containing the hexes for the char
     for (let i = 0; i < byteArray.length; i += 1) {
@@ -496,16 +492,16 @@ class BaseOLED {
   // Batch multiple commands or data values into a single I2C transfer for better efficiency
   _transferBatch = async (type, values) => {
     const control = type === 'data' ? 0x40 : 0x00;
-    
+
     // Create buffer large enough for all commands (control byte + value for each command)
     const buffer = Buffer.alloc(values.length * 2);
-    
+
     // Fill buffer with alternating control bytes and command/data bytes
     for (let i = 0; i < values.length; i++) {
       buffer[i * 2] = control;
       buffer[i * 2 + 1] = values[i];
     }
-    
+
     // Send all commands in a single I2C transaction
     await this.wire.i2cWrite(this.ADDRESS, buffer.length, buffer);
   };
@@ -513,11 +509,7 @@ class BaseOLED {
   // Read a byte from the oled
   _readI2C = async () => {
     const buffer = Buffer.alloc(1);
-    const { bytesRead, buffer: data } = await this.wire.i2cRead(
-      this.ADDRESS,
-      1,
-      buffer
-    );
+    const { bytesRead, buffer: data } = await this.wire.i2cRead(this.ADDRESS, 1, buffer);
     return bytesRead > 0 ? data[0] : 0;
   };
 

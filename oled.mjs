@@ -1,5 +1,5 @@
 /**
- * Main OLED package entry point 
+ * Main OLED package entry point
  * @module oled-rpi-i2c-bus-async
  * @fileoverview Asynchronous NodeJS module for controlling OLED displays on Raspberry Pi
  */
@@ -19,7 +19,7 @@ const logger = createLogger('OLED');
 const resourceTracker = {
   timers: [],
   animationVars: { pdx: null, pdy: null },
-  
+
   /**
    * Clean up a specific timer
    * @param {number} timerId - The timer ID to clear
@@ -31,12 +31,12 @@ const resourceTracker = {
       resourceTracker.timers.splice(index, 1);
     }
   },
-  
+
   /**
    * Clean up all timers
    */
   clearAllTimers: () => {
-    resourceTracker.timers.forEach(id => clearInterval(id));
+    resourceTracker.timers.forEach((id) => clearInterval(id));
     resourceTracker.timers = [];
   },
 };
@@ -60,12 +60,12 @@ class Oled {
     this.DRIVER = opts?.driver ?? 'SSD1306';
     this.HEIGHT = opts?.height ?? 64;
     this.WIDTH = opts?.width ?? 128;
-    
+
     // Set logger level from options or use default
     if (opts?.logLevel) {
       logger.setLevel(opts.logLevel);
     }
-    
+
     try {
       // Create the appropriate driver implementation
       switch (this.DRIVER) {
@@ -78,7 +78,9 @@ class Oled {
         default:
           throw new Error(`Unknown driver: ${this.DRIVER}`);
       }
-      logger.info(`Initialized ${this.DRIVER} display with dimensions ${this.WIDTH}x${this.HEIGHT}`);
+      logger.info(
+        `Initialized ${this.DRIVER} display with dimensions ${this.WIDTH}x${this.HEIGHT}`
+      );
     } catch (err) {
       logger.error('Failed to initialize display:', err);
       throw err;
@@ -318,38 +320,38 @@ class Oled {
           [x + 17, y + 1, 1],
           [x + 17, y + 7, 1],
         ]),
-        this.drawLine(x + 18, y + 1, x + 18, y + 7, 1)
+        this.drawLine(x + 18, y + 1, x + 18, y + 7, 1),
       ]);
-      
+
       // Draw battery level based on percentage
       let operations = [];
-      
+
       if (percentage >= 70) {
         operations = [
           this.fillRect(x + 2, y + 2, 3, 5, 1, false),
           this.fillRect(x + 7, y + 2, 3, 5, 1, false),
-          this.fillRect(x + 12, y + 2, 3, 5, 1, true)
+          this.fillRect(x + 12, y + 2, 3, 5, 1, true),
         ];
       } else if (percentage >= 40) {
         operations = [
           this.fillRect(x + 2, y + 2, 3, 5, 1, false),
           this.fillRect(x + 7, y + 2, 3, 5, 1, false),
-          this.fillRect(x + 12, y + 2, 3, 5, 0, true)
+          this.fillRect(x + 12, y + 2, 3, 5, 0, true),
         ];
       } else if (percentage >= 10) {
         operations = [
           this.fillRect(x + 2, y + 2, 3, 5, 1, false),
           this.fillRect(x + 7, y + 2, 3, 5, 0, false),
-          this.fillRect(x + 12, y + 2, 3, 5, 0, true)
+          this.fillRect(x + 12, y + 2, 3, 5, 0, true),
         ];
       } else {
         operations = [
           this.fillRect(x + 2, y + 2, 3, 5, 0, false),
           this.fillRect(x + 7, y + 2, 3, 5, 0, false),
-          this.fillRect(x + 12, y + 2, 3, 5, 0, true)
+          this.fillRect(x + 12, y + 2, 3, 5, 0, true),
         ];
       }
-      
+
       await Promise.all(operations);
     } catch (err) {
       logger.error('Error drawing battery icon:', err);
@@ -371,7 +373,7 @@ class Oled {
         this.drawLine(x + 2, y + 3, x + 9, y + 8, 1),
         this.drawLine(x + 2, y + 9, x + 8, y + 3, 1),
         this.drawLine(x + 5, y + 1, x + 9, y + 3, 1),
-        this.drawLine(x + 5, y + 11, x + 8, y + 9, 1)
+        this.drawLine(x + 5, y + 11, x + 8, y + 9, 1),
       ]);
     } catch (err) {
       logger.error('Error drawing bluetooth icon:', err);
@@ -394,38 +396,38 @@ class Oled {
         this.drawLine(x, y, x + 8, y, 1),
         this.drawLine(x, y, x + 4, y + 4, 1),
         this.drawLine(x + 8, y, x + 4, y + 4, 1),
-        this.drawLine(x + 4, y, x + 4, y + 9, 1)
+        this.drawLine(x + 4, y, x + 4, y + 9, 1),
       ]);
 
       // Draw signal strength based on percentage
       let operations = [];
-      
+
       if (percentage >= 70) {
         operations = [
           this.fillRect(x + 6, y + 8, 2, 2, 1, true),
           this.fillRect(x + 10, y + 6, 2, 4, 1, true),
-          this.fillRect(x + 14, y + 4, 2, 6, 1, true)
+          this.fillRect(x + 14, y + 4, 2, 6, 1, true),
         ];
       } else if (percentage >= 40) {
         operations = [
           this.fillRect(x + 6, y + 8, 2, 2, 1, true),
           this.fillRect(x + 10, y + 6, 2, 4, 1, true),
-          this.fillRect(x + 14, y + 4, 2, 6, 0, true)
+          this.fillRect(x + 14, y + 4, 2, 6, 0, true),
         ];
       } else if (percentage >= 10) {
         operations = [
           this.fillRect(x + 6, y + 8, 2, 2, 1, true),
           this.fillRect(x + 10, y + 6, 2, 4, 0, true),
-          this.fillRect(x + 14, y + 4, 2, 6, 0, true)
+          this.fillRect(x + 14, y + 4, 2, 6, 0, true),
         ];
       } else {
         operations = [
           this.fillRect(x + 6, y + 8, 2, 2, 0, true),
           this.fillRect(x + 10, y + 6, 2, 4, 0, true),
-          this.fillRect(x + 14, y + 4, 2, 6, 0, true)
+          this.fillRect(x + 14, y + 4, 2, 6, 0, true),
         ];
       }
-      
+
       await Promise.all(operations);
     } catch (err) {
       logger.error('Error drawing wifi icon:', err);
@@ -457,7 +459,7 @@ class Oled {
         resourceTracker.clearAllTimers();
         resourceTracker.animationVars.pdx = null;
         resourceTracker.animationVars.pdy = null;
-        
+
         // Clear display if requested
         if (clear) {
           await this.clearDisplay();
@@ -492,25 +494,25 @@ class Oled {
 
       // Process the image
       const _oled = this;
-      
+
       // Use a proper Promise-based approach for handling the PNG stream
       await new Promise((resolve, reject) => {
         fs.createReadStream(image)
           .pipe(new PNG({ filterType: 4 }))
-          .on('parsed', async function() {
+          .on('parsed', async function () {
             try {
               if (animated) {
                 resourceTracker.animationVars.pdx = 1;
                 resourceTracker.animationVars.pdy = -1;
-                
+
                 // Create animation interval
                 const myInterval = setInterval(async () => {
                   try {
                     await _oled._drawPseudo(
-                      _oled, 
-                      clear, 
-                      this, 
-                      resourceTracker.animationVars.pdx, 
+                      _oled,
+                      clear,
+                      this,
+                      resourceTracker.animationVars.pdx,
                       resourceTracker.animationVars.pdy
                     );
                   } catch (err) {
@@ -518,7 +520,7 @@ class Oled {
                     resourceTracker.clearTimer(myInterval);
                   }
                 }, 10);
-                
+
                 resourceTracker.timers.push(myInterval);
               } else {
                 // Draw static image
@@ -539,7 +541,6 @@ class Oled {
             reject(err);
           });
       });
-      
     } catch (err) {
       logger.error('Image processing error:', err);
       throw err;
@@ -573,12 +574,12 @@ class Oled {
         this._drawPseudo.dx = pdx;
         this._drawPseudo.dy = pdy;
       }
-      
+
       if (clear) {
         // Optimize by using Promise.all for parallel drawing
         await Promise.all([
           display.fillRect(0, 0, display.WIDTH, display.HEIGHT, 1, true),
-          display.fillRect(1, 1, display.WIDTH - 2, display.HEIGHT - 2, 0, true)
+          display.fillRect(1, 1, display.WIDTH - 2, display.HEIGHT - 2, 0, true),
         ]);
       } else {
         // Clear previous image position
@@ -590,7 +591,7 @@ class Oled {
           0,
           false
         );
-        
+
         // Update position tracking
         this._drawPseudo.prevX = this._drawPseudo.x;
         this._drawPseudo.prevY = this._drawPseudo.y;
@@ -598,7 +599,7 @@ class Oled {
 
       // Draw image at current position
       await display.drawRGBAImage(image, this._drawPseudo.x, this._drawPseudo.y, true);
-      
+
       // Handle boundary conditions and update position
       if (
         this._drawPseudo.x + this._drawPseudo.dx > display.WIDTH - image.width ||
@@ -606,7 +607,7 @@ class Oled {
       ) {
         this._drawPseudo.dx = -this._drawPseudo.dx;
       }
-      
+
       if (
         this._drawPseudo.y + this._drawPseudo.dy > display.HEIGHT - image.height ||
         this._drawPseudo.y < 1

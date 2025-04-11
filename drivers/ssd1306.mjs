@@ -5,10 +5,10 @@ import { createLogger } from '../utils/logger.mjs';
 class SSD1306 extends BaseOLED {
   constructor(i2c, opts) {
     super(i2c, opts);
-    
+
     // Create driver-specific logger
     this.logger = createLogger('SSD1306');
-    
+
     // Set logger level if provided
     if (opts?.logLevel) {
       this.logger.setLevel(opts.logLevel);
@@ -52,7 +52,7 @@ class SSD1306 extends BaseOLED {
 
     const screenSize = `${this.WIDTH}x${this.HEIGHT}`;
     this.screenConfig = config[screenSize];
-    
+
     // Initialize the display
     this._initialise();
   }
@@ -146,64 +146,50 @@ class SSD1306 extends BaseOLED {
   _initialise = async () => {
     try {
       // Initial commands that must be sent sequentially
-      const initialSeq = [
-        this.DISPLAY_OFF,
-        this.SET_DISPLAY_CLOCK_DIV,
-        0x80
-      ];
-      
+      const initialSeq = [this.DISPLAY_OFF, this.SET_DISPLAY_CLOCK_DIV, 0x80];
+
       // Send initial commands as a batch
       await this._transferBatch('cmd', initialSeq);
-      
+
       // Group 1 of commands - send in batch instead of parallel
       const group1 = [
         this.SET_MULTIPLEX,
         this.screenConfig.multiplex,
         this.SET_DISPLAY_OFFSET,
         0x00,
-        this.SET_START_LINE
+        this.SET_START_LINE,
       ];
       await this._transferBatch('cmd', group1);
-      
+
       // Group 2 of commands - send in batch instead of parallel
-      const group2 = [
-        this.CHARGE_PUMP,
-        0x14,
-        this.MEMORY_MODE,
-        0x00
-      ];
+      const group2 = [this.CHARGE_PUMP, 0x14, this.MEMORY_MODE, 0x00];
       await this._transferBatch('cmd', group2);
-      
+
       // Group 3 of commands - send in batch instead of parallel
       const group3 = [
         this.SEG_REMAP,
         this.COM_SCAN_DEC,
         this.SET_COM_PINS,
-        this.screenConfig.compins
+        this.screenConfig.compins,
       ];
       await this._transferBatch('cmd', group3);
-      
+
       // Group 4 of commands - send in batch instead of parallel
-      const group4 = [
-        this.SET_CONTRAST,
-        0x8f,
-        this.SET_PRECHARGE,
-        0xf1
-      ];
+      const group4 = [this.SET_CONTRAST, 0x8f, this.SET_PRECHARGE, 0xf1];
       await this._transferBatch('cmd', group4);
-      
+
       // Final commands
       const finalSeq = [
         this.SET_VCOM_DETECT,
         0x40,
         this.DISPLAY_ALL_ON_RESUME,
         this.NORMAL_DISPLAY,
-        this.DISPLAY_ON
+        this.DISPLAY_ON,
       ];
-      
+
       // Send final commands as a batch
       await this._transferBatch('cmd', finalSeq);
-      
+
       this.logger.debug('Display initialized successfully');
     } catch (err) {
       this.logger.error('Error initializing display:', err);
@@ -215,7 +201,7 @@ class SSD1306 extends BaseOLED {
   _updateDirtyBytes = async (dirtyByteArray) => {
     try {
       const dirtyByteArrayLen = dirtyByteArray.length;
-      
+
       // If there are no dirty bytes, nothing to do
       if (dirtyByteArrayLen === 0) {
         return;
@@ -229,39 +215,39 @@ class SSD1306 extends BaseOLED {
         this.dirtyBytes = [];
         return;
       }
-      
+
       // Wait for display to be ready
       await this._waitUntilReady();
 
       // Group dirty bytes by page for more efficient updates
       const pageGroups = new Map();
-      
+
       // Sort dirty bytes by page and column for more efficient I2C commands
       for (let i = 0; i < dirtyByteArrayLen; i++) {
         const byteIndex = dirtyByteArray[i];
         const page = Math.floor(byteIndex / this.WIDTH);
         const col = Math.floor(byteIndex % this.WIDTH);
-        
+
         if (!pageGroups.has(page)) {
           pageGroups.set(page, []);
         }
-        
+
         pageGroups.get(page).push({
           col,
-          byteIndex
+          byteIndex,
         });
       }
-      
+
       // Now update each page's dirty bytes
       for (const [page, bytes] of pageGroups.entries()) {
         // Sort by column for sequential access
         bytes.sort((a, b) => a.col - b.col);
-        
+
         // Optimize for consecutive columns by grouping them into ranges
         let currentStart = null;
         let currentEnd = null;
         let currentData = [];
-        
+
         const flushCurrentRange = async () => {
           if (currentStart !== null) {
             // Send display position commands as a batch
@@ -271,45 +257,45 @@ class SSD1306 extends BaseOLED {
               currentEnd,
               this.PAGE_ADDR,
               page,
-              page
+              page,
             ];
-            
+
             await this._transferBatch('cmd', displaySeq);
-            
+
             // Send all data bytes for this range in a batch
             await this._transferBatch('data', currentData);
-            
+
             // Reset tracking variables
             currentStart = null;
             currentEnd = null;
             currentData = [];
           }
         };
-        
+
         // Process each byte
         for (let i = 0; i < bytes.length; i++) {
           const { col, byteIndex } = bytes[i];
-          
+
           // If this is a new range or not consecutive with previous column
           if (currentStart === null || col !== currentEnd + 1) {
             // Flush the current range if any
             await flushCurrentRange();
-            
+
             // Start a new range
             currentStart = col;
           }
-          
+
           // Update the end of the range
           currentEnd = col;
-          
+
           // Add data to the current batch
           currentData.push(this.buffer[byteIndex]);
         }
-        
+
         // Flush any remaining range
         await flushCurrentRange();
       }
-      
+
       // Reset dirty bytes
       this.dirtyBytes = [];
     } catch (err) {

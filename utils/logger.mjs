@@ -9,27 +9,22 @@
 export const createLogger = (name) => {
   // Default log level is info
   let currentLevel = 'info';
-  
+
   const logger = {
     // Available log levels in order of verbosity
     levels: ['debug', 'info', 'warn', 'error', 'silent'],
-    
-    debug: (...args) => 
-      currentLevel === 'debug' && 
-      console.debug(`[${name} Debug]`, ...args),
-    
-    info: (...args) => 
-      ['debug', 'info'].includes(currentLevel) && 
-      console.info(`[${name} Info]`, ...args),
-    
-    warn: (...args) => 
-      ['debug', 'info', 'warn'].includes(currentLevel) && 
+
+    debug: (...args) => currentLevel === 'debug' && console.debug(`[${name} Debug]`, ...args),
+
+    info: (...args) =>
+      ['debug', 'info'].includes(currentLevel) && console.info(`[${name} Info]`, ...args),
+
+    warn: (...args) =>
+      ['debug', 'info', 'warn'].includes(currentLevel) &&
       console.warn(`[${name} Warning]`, ...args),
-    
-    error: (...args) => 
-      currentLevel !== 'silent' && 
-      console.error(`[${name} Error]`, ...args),
-    
+
+    error: (...args) => currentLevel !== 'silent' && console.error(`[${name} Error]`, ...args),
+
     // Change the current log level
     setLevel: (level) => {
       if (logger.levels.includes(level)) {
@@ -38,9 +33,9 @@ export const createLogger = (name) => {
         console.warn(`[${name}] Invalid log level: ${level}. Using 'info' instead.`);
         currentLevel = 'info';
       }
-    }
+    },
   };
-  
+
   return logger;
 };
 
