@@ -5,10 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.6] - 2025-04-11
 ### Added
-- New Bluetooth and WiFi example files in ES6 module format
-- Additional npm scripts for running the new examples
+- Comprehensive README improvements:
+  - Added Table of Contents for better navigation
+  - Added TypeScript usage examples
+  - Added Performance Optimization section
+  - Added Logging and Debugging section
+  - Added instructions for running example scripts
+- Additional badges in README for build status and PRs welcome
+
+### Changed
+- Reorganized documentation into clear sections
+- Improved TypeScript usage documentation
+- Fixed typos and parameter descriptions
+- Enhanced feature descriptions to highlight TypeScript support and logger utility
+
+## [1.0.5] - 2025-04-11
+### Added
+- TypeScript type definitions for all classes and functions
+- New logger utility for consistent logging
+- Improved batch command processing for better performance
+- More examples for all major features
+- Additional npm scripts for running examples
+- Added CHANGELOG.md to the npm package
+
+### Changed
+- Optimized drawing operations for better performance
+- Enhanced error handling throughout the codebase
+- Improved documentation with TypeScript types
+- Better memory management for large bitmap operations
+
+### Fixed
+- Fixed memory leak in animation processing
+- Improved SH1106 display initialization sequence
+- Fixed potential race conditions in async operations
 
 ## [1.0.4] - 2025-04-11
 ### Added

@@ -1,76 +1,84 @@
 {
-	"name": "oled-rpi-i2c-bus-async",
-	"version": "1.0.4",
-	"description": "Asynchronous NodeJS module for controlling oled devices on the Raspbery Pi (including the SSD1306 and SH1106 OLED screens)",
-	"type": "module",
-	"main": "oled.mjs",
-	"engines": {
-		"node": ">=16.0.0"
-	},
-	"files": [
-		"oled.mjs",
-		"drivers/*.mjs",
-		"utils/*.mjs",
-		"resources/*.png",
-		"README.md",
-		"LICENSE"
-	],
-	"devDependencies": {
-		"eslint": "^8.54.0",
-		"eslint-config-prettier": "^9.0.0",
-		"oled-font-pack": "^1.0.1",
-		"png-to-lcd": "^1.1.0",
-		"pngparse": "^2.0.1",
-		"prettier": "^3.5.3",
-		"temporal": "^0.7.1"
-	},
-	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"example": "node tests/writeString.mjs",
-		"example:battery": "node tests/battery.mjs",
-		"example:image": "node tests/image.mjs",
-		"example:bluetooth": "node tests/bluetooth.mjs",
-		"example:wifi": "node tests/wifi.mjs",
-		"lint": "eslint .",
-		"format": "prettier --write \"**/*.{mjs,json,md}\""
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/grevelle/oled-rpi-i2c-bus-async.git"
-	},
-	"keywords": [
-		"Raspberry Pi",
-		"Pi",
-		"NodeJS",
-		"async",
-		"asynchronous",
-		"oled",
-		"SSD1306",
-		"SH1106",
-		"128x64",
-		"128x32",
-		"96x16",
-		"I2C",
-		"SPI",
-		"Monochrome",
-		"Display",
-		"Screen",
-		"JavaScript",
-		"ES6",
-		"Non-blocking",
-		"PLED",
-		"Driver",
-		"Hardware",
-		"Embedded"
-	],
-	"author": "Judd Flamm, Suz Hinton, Bogdan Symchych, Abdul Hadi Fikri, Greg Revelle",
-	"license": "MIT",
-	"bugs": {
-		"url": "https://github.com/grevelle/oled-rpi-i2c-bus-async/issues"
-	},
-	"homepage": "https://github.com/grevelle/oled-rpi-i2c-bus-async",
-	"dependencies": {
-		"i2c-bus": "^5.2.3",
-		"pngjs": "^7.0.0"
-	}
+  "name": "oled-rpi-i2c-bus-async",
+  "version": "1.0.6",
+  "description": "Asynchronous NodeJS module for controlling oled devices on the Raspbery Pi (including the SSD1306 and SH1106 OLED screens)",
+  "type": "module",
+  "main": "oled.mjs",
+  "types": "types/oled.d.ts",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "oled.mjs",
+    "drivers/*.mjs",
+    "utils/*.mjs",
+    "resources/*.png",
+    "types/*.d.ts",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "devDependencies": {
+    "eslint": "^8.54.0",
+    "eslint-config-prettier": "^9.0.0",
+    "oled-font-pack": "^1.0.1",
+    "png-to-lcd": "^1.1.0",
+    "pngparse": "^2.0.1",
+    "prettier": "^3.5.3",
+    "temporal": "^0.7.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "example": "node tests/writeString.mjs",
+    "example:battery": "node tests/battery.mjs",
+    "example:image": "node tests/image.mjs",
+    "example:bluetooth": "node tests/bluetooth.mjs",
+    "example:wifi": "node tests/wifi.mjs",
+    "example:drawLine": "node tests/drawLine.mjs",
+    "example:drawPixel": "node tests/drawPixel.mjs",
+    "example:fillRect": "node tests/fillRect.mjs",
+    "example:bitmap": "node tests/drawBitmap.mjs",
+    "lint": "eslint .",
+    "format": "prettier --write \"**/*.{mjs,json,md}\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grevelle/oled-rpi-i2c-bus-async.git"
+  },
+  "keywords": [
+    "Raspberry Pi",
+    "Pi",
+    "NodeJS",
+    "async",
+    "asynchronous",
+    "oled",
+    "SSD1306",
+    "SH1106",
+    "128x64",
+    "128x32",
+    "96x16",
+    "I2C",
+    "SPI",
+    "Monochrome",
+    "Display",
+    "Screen",
+    "JavaScript",
+    "ES6",
+    "Non-blocking",
+    "PLED",
+    "Driver",
+    "Hardware",
+    "Embedded",
+    "TypeScript"
+  ],
+  "author": "Judd Flamm, Suz Hinton, Bogdan Symchych, Abdul Hadi Fikri, Greg Revelle",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/grevelle/oled-rpi-i2c-bus-async/issues"
+  },
+  "homepage": "https://github.com/grevelle/oled-rpi-i2c-bus-async",
+  "dependencies": {
+    "i2c-bus": "^5.2.3",
+    "pngjs": "^7.0.0"
+  }
 }
