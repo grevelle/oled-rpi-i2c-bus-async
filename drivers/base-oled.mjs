@@ -34,6 +34,12 @@ class BaseOLED {
     this.NORMAL_DISPLAY = 0xa6;
     this.INVERT_DISPLAY = 0xa7;
     this.SET_CONTRAST_CTRL_MODE = 0x81;
+    
+    // Common addressing modes used by both drivers
+    this.MEMORY_MODE = 0x20;
+    this.HORIZONTAL_ADDRESSING_MODE = 0x00;
+    this.VERTICAL_ADDRESSING_MODE = 0x01;
+    this.PAGE_ADDRESSING_MODE = 0x02;
 
     // Initialize cursor position
     this.cursor_x = 0;
@@ -77,6 +83,140 @@ class BaseOLED {
     } else {
       await this._transfer('cmd', this.NORMAL_DISPLAY); // non inverted
     }
+  };
+
+  /* ##################################################################################################
+   * Enhanced OLED control methods - provide optimized implementations that can be overridden
+   * ##################################################################################################
+   */
+
+  // Enhanced turnOnDisplay with optimized power sequence
+  _enhancedTurnOnDisplay = async (options) => {
+    try {
+      // Optimized standard power-on sequence based on both SSD1306 and SH1106 datasheets
+      await this._transferBatch('cmd', [
+        this.DISPLAY_OFF,           // Display off during changes
+        this.SET_CONTRAST_CTRL_MODE, // Set contrast control
+        options?.contrast ?? 0x8F,   // Default contrast
+        this.DISPLAY_ALL_ON_RESUME,  // Resume to RAM content
+        this.NORMAL_DISPLAY,         // Normal (non-inverted) display
+        this.DISPLAY_ON              // Turn display on
+      ]);
+    } catch (err) {
+      this._handleError('turning on display', err);
+    }
+  };
+
+  // Enhanced turnOffDisplay with optimized power sequence
+  _enhancedTurnOffDisplay = async (options) => {
+    try {
+      // Standard power-off sequence with optional commands
+      const commands = [this.DISPLAY_OFF];
+      
+      // Add any additional power-down commands if provided
+      if (options?.additionalCommands) {
+        commands.push(...options.additionalCommands);
+      }
+      
+      await this._transferBatch('cmd', commands);
+    } catch (err) {
+      this._handleError('turning off display', err);
+    }
+  };
+
+  // Enhanced dimDisplay with optimized contrast control
+  _enhancedDimDisplay = async (bool, options = {}) => {
+    try {
+      // Default contrast values based on common values for OLED displays
+      const brightContrast = options.brightContrast ?? 0xCF;
+      const dimContrast = options.dimContrast ?? 0x0F;
+      
+      // Apply contrast based on bool parameter
+      const contrast = bool ? dimContrast : brightContrast;
+      
+      // Use batch commands for better performance
+      await this._transferBatch('cmd', [this.SET_CONTRAST_CTRL_MODE, contrast]);
+    } catch (err) {
+      this._handleError('dimming display', err);
+    }
+  };
+
+  // Enhanced invertDisplay with optimal contrast adjustment
+  _enhancedInvertDisplay = async (bool, options = {}) => {
+    try {
+      // Default contrast values optimized for normal and inverted modes
+      const normalContrast = options.normalContrast ?? 0x8F;
+      const invertedContrast = options.invertedContrast ?? 0x60;
+      
+      // Commands for setting display mode and adjusting contrast accordingly
+      const commands = bool ? 
+        [this.INVERT_DISPLAY, this.SET_CONTRAST_CTRL_MODE, invertedContrast] : 
+        [this.NORMAL_DISPLAY, this.SET_CONTRAST_CTRL_MODE, normalContrast];
+      
+      await this._transferBatch('cmd', commands);
+    } catch (err) {
+      this._handleError('inverting display', err);
+    }
+  };
+
+  /* ##################################################################################################
+   * Enhanced display control methods that can be used by derived classes
+   * ##################################################################################################
+   */
+
+  // Enhanced dim display with device-specific contrast values
+  _enhancedDimDisplay = async (bool, options = {}) => {
+    const { brightContrast = 0xff, dimContrast = 0x00 } = options;
+    const contrast = bool ? dimContrast : brightContrast; 
+    await this._transferBatch('cmd', [this.SET_CONTRAST_CTRL_MODE, contrast]);
+  };
+
+  // Enhanced invert display with device-specific contrast adjustments
+  _enhancedInvertDisplay = async (bool, options = {}) => {
+    const { normalContrast = 0x80, invertedContrast = 0x60 } = options;
+    
+    if (bool) {
+      // When inverting, adjust contrast for better readability in inverted mode
+      await this._transferBatch('cmd', [
+        this.INVERT_DISPLAY,  // Invert display command
+        this.SET_CONTRAST,    // Follow with contrast adjustment
+        invertedContrast      // Contrast value optimized for inverted display
+      ]);
+    } else {
+      // When restoring normal display, also restore optimal contrast
+      await this._transferBatch('cmd', [
+        this.NORMAL_DISPLAY,  // Normal display command
+        this.SET_CONTRAST,    // Follow with contrast adjustment
+        normalContrast        // Default contrast value
+      ]);
+    }
+  };
+
+  // Enhanced turn on display with device-specific power-on sequence
+  _enhancedTurnOnDisplay = async (options = {}) => {
+    const { contrast = 0x80, additionalCommands = [] } = options;
+    
+    // Build the command sequence with display off during changes
+    const commands = [
+      this.DISPLAY_OFF,  // Display off during changes
+      ...additionalCommands,
+      this.DISPLAY_ON    // Display on
+    ];
+    
+    await this._transferBatch('cmd', commands);
+  };
+
+  // Enhanced turn off display with device-specific power-down sequence
+  _enhancedTurnOffDisplay = async (options = {}) => {
+    const { additionalCommands = [] } = options;
+    
+    // Build the command sequence for power-optimized shutdown
+    const commands = [
+      this.DISPLAY_OFF,  // Display off
+      ...additionalCommands
+    ];
+    
+    await this._transferBatch('cmd', commands);
   };
 
   /* ##################################################################################################
@@ -530,6 +670,39 @@ class BaseOLED {
   };
 
   /* ##################################################################################################
+   * Base initialization helper methods (to be used by derived classes)
+   * ##################################################################################################
+   */
+
+  // Base initialization method that follows a standard flow structure
+  _baseInitialize = async (initSequences) => {
+    try {
+      // Process each sequence batch in order
+      for (const { name, commands } of initSequences) {
+        this.logger.debug(`Processing initialization batch: ${name}`);
+        await this._transferBatch('cmd', commands);
+      }
+
+      this.logger.debug('Display initialized successfully');
+      return true;
+    } catch (err) {
+      this.logger.error('Error initializing display:', err);
+      throw err;
+    }
+  };
+
+  /* ##################################################################################################
+   * Common error handling method
+   * ##################################################################################################
+   */
+
+  // Handle errors consistently across all driver implementations
+  _handleError = (operation, error) => {
+    this.logger.error(`Error during ${operation}:`, error);
+    throw error;
+  };
+
+  /* ##################################################################################################
    * Methods that must be implemented by derived classes
    * ##################################################################################################
    */
@@ -546,6 +719,40 @@ class BaseOLED {
   _updateDirtyBytes() {
     throw new Error('_updateDirtyBytes method must be implemented by derived class');
   }
+
+  /* ##################################################################################################
+   * Common update strategy methods - provide default implementations that can be overridden
+   * ##################################################################################################
+   */
+
+  // Common logic for determining whether to do a full update or partial update
+  _shouldDoFullUpdate = (dirtyByteArray) => {
+    // If there are more than ~14% of bytes dirty, full update is more efficient (1/7)
+    return dirtyByteArray.length > this.buffer.length / 7;
+  };
+
+  // Group dirty bytes by page for more efficient updates - used by both drivers
+  _groupDirtyBytesByPage = (dirtyByteArray) => {
+    const pageGroups = new Map();
+
+    // Sort dirty bytes by page and column for more efficient I2C commands
+    for (let i = 0; i < dirtyByteArray.length; i++) {
+      const byteIndex = dirtyByteArray[i];
+      const page = Math.floor(byteIndex / this.WIDTH);
+      const col = Math.floor(byteIndex % this.WIDTH);
+
+      if (!pageGroups.has(page)) {
+        pageGroups.set(page, []);
+      }
+
+      pageGroups.get(page).push({
+        col,
+        byteIndex,
+      });
+    }
+
+    return pageGroups;
+  };
 }
 
 export default BaseOLED;

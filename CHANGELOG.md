@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.8] - 2025-04-11
+
+### Added
+
+- Enhanced base class functionality with standardized implementations for common operations
+- New optimization methods in the BaseOLED class for device-agnostic improvements
+- Common update strategy methods that benefit both display types
+- Standardized error handling across all driver implementations
+
+### Changed
+
+- Consolidated duplicate code between SSD1306 and SH1106 drivers into BaseOLED
+- Improved display control methods (dim, invert, turnOn, turnOff) with device-specific optimizations
+- Enhanced update strategies for both full and partial screen updates
+- Optimized batch command processing for both display types
+- Refactored driver initialization to use a shared base method
+
+### Improved
+
+- Performance optimizations for both SSD1306 and SH1106 displays
+- Memory efficiency for display operations
+- Code maintainability through better inheritance structure
+- Update performance through smarter dirty rectangle handling
+
 ## [1.0.6] - 2025-04-11
 
 ### Added

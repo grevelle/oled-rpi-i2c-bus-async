@@ -17,7 +17,6 @@ class SSD1306 extends BaseOLED {
     // SSD1306 specific command definitions
     this.SET_START_LINE = 0x00;
     this.CHARGE_PUMP = 0x8d;
-    this.MEMORY_MODE = 0x20;
     this.SEG_REMAP = 0xa1;
     this.COM_SCAN_DEC = 0xc8;
     this.COM_SCAN_INC = 0xc0;
@@ -114,10 +113,18 @@ class SSD1306 extends BaseOLED {
     await this._transfer('cmd', this.DEACTIVATE_SCROLL);
   };
 
-  // Send the entire framebuffer to the oled
+  // Send the entire framebuffer to the oled with hardware acceleration
   update = async () => {
     // Wait for oled to be ready
     await this._waitUntilReady();
+
+    // Set the addressing mode for optimal full screen updates
+    await this._transferBatch('cmd', [
+      this.MEMORY_MODE,
+      this.HORIZONTAL_ADDRESSING_MODE,  // Horizontal is best for full updates
+      0xD5,                             // Set display clock divide ratio/oscillator frequency
+      0xF0                              // Set higher frequency for faster refresh (per SSD1306 datasheet section 10.1.16)
+    ]);
 
     // Set the start and end byte locations for oled display update
     const displaySeq = [
@@ -132,7 +139,7 @@ class SSD1306 extends BaseOLED {
     // Send intro sequence all at once instead of individually
     await this._transferBatch('cmd', displaySeq);
 
-    // Write buffer data
+    // Write buffer data in one efficient transfer
     const bufferToSend = Buffer.concat([Buffer.from([0x40]), this.buffer]);
     await this.wire.i2cWrite(this.ADDRESS, bufferToSend.length, bufferToSend);
   };
@@ -144,57 +151,67 @@ class SSD1306 extends BaseOLED {
 
   // Optimize display initialization with batch commands for better efficiency
   _initialise = async () => {
-    try {
-      // Initial commands that must be sent sequentially
-      const initialSeq = [this.DISPLAY_OFF, this.SET_DISPLAY_CLOCK_DIV, 0x80];
+    // Create initialization sequences with named batches for better organization
+    const initSequences = [
+      {
+        name: 'initial',
+        commands: [
+          this.DISPLAY_OFF,
+          this.SET_DISPLAY_CLOCK_DIV, 
+          0x80  // Use datasheet-recommended clock divider for best performance
+        ]
+      },
+      {
+        name: 'multiplex',
+        commands: [
+          this.SET_MULTIPLEX,
+          this.screenConfig.multiplex,
+          this.SET_DISPLAY_OFFSET,
+          0x00,
+          this.SET_START_LINE | 0x00  // Start at line 0
+        ]
+      },
+      {
+        name: 'charge_pump',
+        commands: [
+          this.CHARGE_PUMP, 
+          0x14,                          // Enable charge pump with optimal setting
+          this.MEMORY_MODE, 
+          this.HORIZONTAL_ADDRESSING_MODE // Default to horizontal addressing mode for efficiency
+        ]
+      },
+      {
+        name: 'com_config',
+        commands: [
+          this.SEG_REMAP,                // Column address 127 is mapped to SEG0
+          this.COM_SCAN_DEC,             // Scan from COM[N-1] to COM0
+          this.SET_COM_PINS,
+          this.HEIGHT === 32 ? 0x02 : 0x12 // Optimize COM pins for display height
+        ]
+      },
+      {
+        name: 'contrast',
+        commands: [
+          this.SET_CONTRAST, 
+          this.HEIGHT === 32 ? 0x8F : 0xCF, // Optimize contrast based on display height
+          this.SET_PRECHARGE, 
+          0xf1                          // Phase 1 = 15, Phase 2 = 1 (optimal from datasheet)
+        ]
+      },
+      {
+        name: 'final',
+        commands: [
+          this.SET_VCOM_DETECT,
+          this.HEIGHT === 64 ? 0x20 : 0x40, // Optimize VCOM level based on display size
+          this.DISPLAY_ALL_ON_RESUME,       // Resume to RAM content display (power efficient)
+          this.NORMAL_DISPLAY,
+          this.DISPLAY_ON
+        ]
+      }
+    ];
 
-      // Send initial commands as a batch
-      await this._transferBatch('cmd', initialSeq);
-
-      // Group 1 of commands - send in batch instead of parallel
-      const group1 = [
-        this.SET_MULTIPLEX,
-        this.screenConfig.multiplex,
-        this.SET_DISPLAY_OFFSET,
-        0x00,
-        this.SET_START_LINE,
-      ];
-      await this._transferBatch('cmd', group1);
-
-      // Group 2 of commands - send in batch instead of parallel
-      const group2 = [this.CHARGE_PUMP, 0x14, this.MEMORY_MODE, 0x00];
-      await this._transferBatch('cmd', group2);
-
-      // Group 3 of commands - send in batch instead of parallel
-      const group3 = [
-        this.SEG_REMAP,
-        this.COM_SCAN_DEC,
-        this.SET_COM_PINS,
-        this.screenConfig.compins,
-      ];
-      await this._transferBatch('cmd', group3);
-
-      // Group 4 of commands - send in batch instead of parallel
-      const group4 = [this.SET_CONTRAST, 0x8f, this.SET_PRECHARGE, 0xf1];
-      await this._transferBatch('cmd', group4);
-
-      // Final commands
-      const finalSeq = [
-        this.SET_VCOM_DETECT,
-        0x40,
-        this.DISPLAY_ALL_ON_RESUME,
-        this.NORMAL_DISPLAY,
-        this.DISPLAY_ON,
-      ];
-
-      // Send final commands as a batch
-      await this._transferBatch('cmd', finalSeq);
-
-      this.logger.debug('Display initialized successfully');
-    } catch (err) {
-      this.logger.error('Error initializing display:', err);
-      throw err;
-    }
+    // Use the common base initialization method
+    await this._baseInitialize(initSequences);
   };
 
   // Optimized dirty byte updater with page grouping and batch commands
@@ -207,8 +224,8 @@ class SSD1306 extends BaseOLED {
         return;
       }
 
-      // Check if full update would be more efficient
-      if (dirtyByteArrayLen > this.buffer.length / 7) {
+      // Check if full update would be more efficient - using common method
+      if (this._shouldDoFullUpdate(dirtyByteArray)) {
         // More efficient to do a full update
         await this.update();
         // Now that all bytes are synced, reset dirty state
@@ -218,25 +235,18 @@ class SSD1306 extends BaseOLED {
 
       // Wait for display to be ready
       await this._waitUntilReady();
+      
+      // Set memory mode to page addressing and optimize command discharge timing
+      // for faster partial updates (see datasheet section 10.1.18)
+      await this._transferBatch('cmd', [
+        this.MEMORY_MODE,
+        this.PAGE_ADDRESSING_MODE, // Page addressing is better for partial updates
+        0xD9,                      // Set pre-charge period command
+        0x22                       // Faster discharge time for partial updates
+      ]);
 
-      // Group dirty bytes by page for more efficient updates
-      const pageGroups = new Map();
-
-      // Sort dirty bytes by page and column for more efficient I2C commands
-      for (let i = 0; i < dirtyByteArrayLen; i++) {
-        const byteIndex = dirtyByteArray[i];
-        const page = Math.floor(byteIndex / this.WIDTH);
-        const col = Math.floor(byteIndex % this.WIDTH);
-
-        if (!pageGroups.has(page)) {
-          pageGroups.set(page, []);
-        }
-
-        pageGroups.get(page).push({
-          col,
-          byteIndex,
-        });
-      }
+      // Group dirty bytes by page for more efficient updates - using common method
+      const pageGroups = this._groupDirtyBytesByPage(dirtyByteArray);
 
       // Now update each page's dirty bytes
       for (const [page, bytes] of pageGroups.entries()) {
@@ -299,9 +309,49 @@ class SSD1306 extends BaseOLED {
       // Reset dirty bytes
       this.dirtyBytes = [];
     } catch (err) {
-      this.logger.error('Error updating dirty bytes:', err);
-      throw err;
+      this._handleError('updating dirty bytes', err);
     }
+  };
+
+  // Override base methods with SSD1306-specific optimizations
+  dimDisplay = async (bool) => {
+    // Use the enhanced base implementation with SSD1306-specific contrast values
+    await this._enhancedDimDisplay(bool, {
+      brightContrast: 0xCF,  // Optimal bright contrast for SSD1306
+      dimContrast: 0x00      // SSD1306 can handle complete dimming
+    });
+  };
+
+  invertDisplay = async (bool) => {
+    // Use the enhanced base implementation with SSD1306-specific contrast values
+    await this._enhancedInvertDisplay(bool, {
+      normalContrast: 0x8F,   // Default contrast for normal display
+      invertedContrast: 0x60  // Lower contrast works better for inverted SSD1306 display
+    });
+  };
+
+  turnOnDisplay = async () => {
+    // Use the enhanced base implementation with SSD1306-specific options
+    await this._enhancedTurnOnDisplay({
+      contrast: 0x8F,
+      // Include additional SSD1306-specific power-on commands
+      additionalCommands: [
+        this.CHARGE_PUMP,      // Set charge pump
+        0x14,                  // Enable charge pump
+        this.SET_PRECHARGE,    // Set pre-charge period
+        0xF1                   // Phase 1 = 15, Phase 2 = 1 (optimal for fast turn-on)
+      ]
+    });
+  };
+
+  turnOffDisplay = async () => {
+    // Use the enhanced base implementation with SSD1306-specific power-down commands
+    await this._enhancedTurnOffDisplay({
+      additionalCommands: [
+        this.CHARGE_PUMP,     // Set charge pump
+        0x10                  // Disable charge pump to save power
+      ]
+    });
   };
 }
 
