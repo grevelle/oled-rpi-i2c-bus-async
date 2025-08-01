@@ -397,3 +397,5 @@ usage:
 import font from 'oled-font-5x7';
 await oled.image(1,1,'rpi-frambuesa.png',font.oled_5x7,true,false,false,true);
 ```
+
+Thank you
